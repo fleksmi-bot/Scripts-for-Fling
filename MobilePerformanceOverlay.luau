@@ -85,7 +85,7 @@ end
 local state = {
 	visible = true,
 	style = "Neon",
-	compact = false,
+	compact = true,
 	rows = {
 		fps = true,
 		ping = true,
@@ -127,35 +127,35 @@ local state = {
 local root = Instance.new("Frame")
 root.Name = "FloatingStats"
 root.AnchorPoint = Vector2.new(0, 0)
-root.Position = UDim2.fromOffset(22, 178)
-root.Size = UDim2.fromOffset(250, 158)
-root.BackgroundTransparency = 0.08
+root.Position = UDim2.fromOffset(18, 170)
+root.Size = UDim2.fromOffset(178, 142)
+root.BackgroundTransparency = 0.38
 root.Active = true
 root.Parent = gui
-applyCorner(root, 22)
-local rootStroke = applyStroke(root, state.colors.Neon.accent, 2, 0)
+applyCorner(root, 18)
+local rootStroke = applyStroke(root, state.colors.Neon.accent, 1.4, 0.18)
 
 local rootPadding = Instance.new("UIPadding")
-rootPadding.PaddingTop = UDim.new(0, 12)
-rootPadding.PaddingBottom = UDim.new(0, 12)
-rootPadding.PaddingLeft = UDim.new(0, 14)
-rootPadding.PaddingRight = UDim.new(0, 14)
+rootPadding.PaddingTop = UDim.new(0, 8)
+rootPadding.PaddingBottom = UDim.new(0, 8)
+rootPadding.PaddingLeft = UDim.new(0, 10)
+rootPadding.PaddingRight = UDim.new(0, 10)
 rootPadding.Parent = root
 
 local header = Instance.new("Frame")
 header.Name = "Header"
 header.BackgroundTransparency = 1
-header.Size = UDim2.new(1, 0, 0, 30)
+header.Size = UDim2.new(1, 0, 0, 24)
 header.Parent = root
 
 local title = Instance.new("TextLabel")
 title.Name = "Title"
 title.BackgroundTransparency = 1
-title.Size = UDim2.new(1, -46, 1, 0)
+title.Size = UDim2.new(1, -34, 1, 0)
 title.Font = Enum.Font.GothamBold
 title.Text = "СТАТУС"
 title.TextXAlignment = Enum.TextXAlignment.Left
-title.TextSize = 18
+title.TextSize = 15
 title.Parent = header
 
 local openHint = Instance.new("TextLabel")
@@ -163,24 +163,24 @@ openHint.Name = "OpenHint"
 openHint.BackgroundTransparency = 1
 openHint.AnchorPoint = Vector2.new(1, 0)
 openHint.Position = UDim2.new(1, 0, 0, 0)
-openHint.Size = UDim2.fromOffset(46, 30)
+openHint.Size = UDim2.fromOffset(34, 24)
 openHint.Font = Enum.Font.GothamBold
 openHint.Text = "⚙"
-openHint.TextSize = 22
+openHint.TextSize = 18
 openHint.Parent = header
 
 local rowsHolder = Instance.new("Frame")
 rowsHolder.Name = "Rows"
 rowsHolder.BackgroundTransparency = 1
-rowsHolder.Position = UDim2.fromOffset(0, 38)
-rowsHolder.Size = UDim2.new(1, 0, 1, -38)
+rowsHolder.Position = UDim2.fromOffset(0, 30)
+rowsHolder.Size = UDim2.new(1, 0, 1, -30)
 rowsHolder.Parent = root
 
 local rowsLayout = Instance.new("UIListLayout")
 rowsLayout.FillDirection = Enum.FillDirection.Vertical
 rowsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 rowsLayout.SortOrder = Enum.SortOrder.LayoutOrder
-rowsLayout.Padding = UDim.new(0, 6)
+rowsLayout.Padding = UDim.new(0, 4)
 rowsLayout.Parent = rowsHolder
 
 local rowInfo = {
@@ -196,25 +196,25 @@ local valueLabels = {}
 for key, info in pairs(rowInfo) do
 	local row = Instance.new("Frame")
 	row.Name = key .. "Row"
-	row.BackgroundTransparency = 0.32
-	row.Size = UDim2.new(1, 0, 0, 22)
+	row.BackgroundTransparency = 0.46
+	row.Size = UDim2.new(1, 0, 0, 19)
 	row.LayoutOrder = info.order
 	row.Parent = rowsHolder
-	applyCorner(row, 9)
+	applyCorner(row, 8)
 
 	local rowPad = Instance.new("UIPadding")
-	rowPad.PaddingLeft = UDim.new(0, 8)
-	rowPad.PaddingRight = UDim.new(0, 8)
+	rowPad.PaddingLeft = UDim.new(0, 6)
+	rowPad.PaddingRight = UDim.new(0, 6)
 	rowPad.Parent = row
 
 	local label = Instance.new("TextLabel")
 	label.Name = "Label"
 	label.BackgroundTransparency = 1
-	label.Size = UDim2.new(0.58, 0, 1, 0)
+	label.Size = UDim2.new(0.52, 0, 1, 0)
 	label.Font = Enum.Font.GothamSemibold
 	label.Text = info.icon .. "  " .. info.label
 	label.TextXAlignment = Enum.TextXAlignment.Left
-	label.TextSize = 13
+	label.TextSize = 12
 	label.Parent = row
 
 	local value = Instance.new("TextLabel")
@@ -222,11 +222,11 @@ for key, info in pairs(rowInfo) do
 	value.BackgroundTransparency = 1
 	value.AnchorPoint = Vector2.new(1, 0)
 	value.Position = UDim2.new(1, 0, 0, 0)
-	value.Size = UDim2.new(0.42, 0, 1, 0)
+	value.Size = UDim2.new(0.48, 0, 1, 0)
 	value.Font = Enum.Font.GothamBold
 	value.Text = "--"
 	value.TextXAlignment = Enum.TextXAlignment.Right
-	value.TextSize = 13
+	value.TextSize = 12
 	value.Parent = row
 
 	rowLabels[key] = label
@@ -237,52 +237,52 @@ local settings = Instance.new("Frame")
 settings.Name = "SettingsPanel"
 settings.AnchorPoint = Vector2.new(0.5, 0.5)
 settings.Position = UDim2.fromScale(0.5, 0.5)
-settings.Size = UDim2.fromOffset(330, 430)
-settings.BackgroundTransparency = 0.03
+settings.Size = UDim2.fromOffset(286, 318)
+settings.BackgroundTransparency = 0.18
 settings.Visible = false
 settings.Parent = gui
-applyCorner(settings, 26)
-local settingsStroke = applyStroke(settings, state.colors.Neon.accent, 2, 0)
+applyCorner(settings, 20)
+local settingsStroke = applyStroke(settings, state.colors.Neon.accent, 1.4, 0.12)
 
 local settingsPad = Instance.new("UIPadding")
-settingsPad.PaddingTop = UDim.new(0, 18)
-settingsPad.PaddingBottom = UDim.new(0, 18)
-settingsPad.PaddingLeft = UDim.new(0, 18)
-settingsPad.PaddingRight = UDim.new(0, 18)
+settingsPad.PaddingTop = UDim.new(0, 12)
+settingsPad.PaddingBottom = UDim.new(0, 12)
+settingsPad.PaddingLeft = UDim.new(0, 12)
+settingsPad.PaddingRight = UDim.new(0, 12)
 settingsPad.Parent = settings
 
 local settingsTitle = Instance.new("TextLabel")
 settingsTitle.Name = "SettingsTitle"
 settingsTitle.BackgroundTransparency = 1
-settingsTitle.Size = UDim2.new(1, -44, 0, 32)
+settingsTitle.Size = UDim2.new(1, -38, 0, 28)
 settingsTitle.Font = Enum.Font.GothamBold
 settingsTitle.Text = "Настройки оверлея"
 settingsTitle.TextXAlignment = Enum.TextXAlignment.Left
-settingsTitle.TextSize = 20
+settingsTitle.TextSize = 17
 settingsTitle.Parent = settings
 
 local closeButton = Instance.new("TextButton")
 closeButton.Name = "CloseButton"
 closeButton.AnchorPoint = Vector2.new(1, 0)
 closeButton.Position = UDim2.new(1, 0, 0, 0)
-closeButton.Size = UDim2.fromOffset(36, 32)
-closeButton.BackgroundTransparency = 0.25
+closeButton.Size = UDim2.fromOffset(30, 28)
+closeButton.BackgroundTransparency = 0.38
 closeButton.Font = Enum.Font.GothamBold
 closeButton.Text = "×"
-closeButton.TextSize = 24
+closeButton.TextSize = 20
 closeButton.Parent = settings
-applyCorner(closeButton, 12)
+applyCorner(closeButton, 10)
 
 local settingsList = Instance.new("Frame")
 settingsList.Name = "SettingsList"
 settingsList.BackgroundTransparency = 1
-settingsList.Position = UDim2.fromOffset(0, 46)
-settingsList.Size = UDim2.new(1, 0, 1, -46)
+settingsList.Position = UDim2.fromOffset(0, 36)
+settingsList.Size = UDim2.new(1, 0, 1, -36)
 settingsList.Parent = settings
 
 local settingsLayout = Instance.new("UIListLayout")
 settingsLayout.SortOrder = Enum.SortOrder.LayoutOrder
-settingsLayout.Padding = UDim.new(0, 10)
+settingsLayout.Padding = UDim.new(0, 5)
 settingsLayout.Parent = settingsList
 
 local controls = {}
@@ -290,14 +290,14 @@ local controls = {}
 local function createButton(name, text, order, callback)
 	local button = Instance.new("TextButton")
 	button.Name = name
-	button.Size = UDim2.new(1, 0, 0, 38)
-	button.BackgroundTransparency = 0.18
+	button.Size = UDim2.new(1, 0, 0, 24)
+	button.BackgroundTransparency = 0.32
 	button.Font = Enum.Font.GothamSemibold
 	button.Text = text
-	button.TextSize = 14
+	button.TextSize = 12
 	button.LayoutOrder = order
 	button.Parent = settingsList
-	applyCorner(button, 14)
+	applyCorner(button, 10)
 	button.Activated:Connect(callback)
 	return button
 end
@@ -335,24 +335,26 @@ local hideButton = createButton("HideButton", "Скрыть плавающее �
 end)
 
 local resetButton = createButton("ResetButton", "Вернуть окно в левый верхний угол", 8, function()
-	root.Position = UDim2.fromOffset(22, 178)
+	root.Position = UDim2.fromOffset(18, 170)
 end)
 
 local footer = Instance.new("TextLabel")
 footer.Name = "Footer"
 footer.BackgroundTransparency = 1
-footer.Size = UDim2.new(1, 0, 0, 44)
+footer.Size = UDim2.new(1, 0, 0, 26)
 footer.Font = Enum.Font.Gotham
-footer.Text = "Перетащи окно пальцем. Быстрый тап открывает эти настройки."
+footer.Text = "Тап — настройки, свайп — перенос."
 footer.TextWrapped = true
-footer.TextSize = 12
+footer.TextSize = 11
 footer.LayoutOrder = 9
 footer.Parent = settingsList
 
 local function applyStyle()
 	local palette = state.colors[state.style]
 	root.BackgroundColor3 = palette.background
+	root.BackgroundTransparency = 0.38
 	settings.BackgroundColor3 = palette.background
+	settings.BackgroundTransparency = 0.18
 	rootStroke.Color = palette.accent
 	settingsStroke.Color = palette.accent
 	title.TextColor3 = palette.text
@@ -366,6 +368,7 @@ local function applyStyle()
 
 	for key, label in pairs(rowLabels) do
 		label.Parent.BackgroundColor3 = palette.panel
+		label.Parent.BackgroundTransparency = 0.46
 		label.TextColor3 = palette.subtext
 		valueLabels[key].TextColor3 = palette.text
 	end
@@ -373,6 +376,7 @@ local function applyStyle()
 	for _, child in ipairs(settingsList:GetChildren()) do
 		if child:IsA("TextButton") then
 			child.BackgroundColor3 = palette.panel
+			child.BackgroundTransparency = 0.32
 			child.TextColor3 = palette.text
 		end
 	end
@@ -391,14 +395,14 @@ local function applyStyle()
 		end
 	end
 
-	local rowHeight = state.compact and 19 or 22
-	local rowPadding = state.compact and 4 or 6
+	local rowHeight = state.compact and 18 or 20
+	local rowPadding = state.compact and 3 or 4
 	rowsLayout.Padding = UDim.new(0, rowPadding)
-	root.Size = state.compact and UDim2.fromOffset(196, 58 + (shownRows * (rowHeight + rowPadding))) or UDim2.fromOffset(250, 62 + (shownRows * (rowHeight + rowPadding)))
+	root.Size = state.compact and UDim2.fromOffset(178, 42 + (shownRows * (rowHeight + rowPadding))) or UDim2.fromOffset(218, 46 + (shownRows * (rowHeight + rowPadding)))
 	for key in pairs(rowLabels) do
 		rowLabels[key].Parent.Size = UDim2.new(1, 0, 0, rowHeight)
-		rowLabels[key].TextSize = state.compact and 12 or 13
-		valueLabels[key].TextSize = state.compact and 12 or 13
+		rowLabels[key].TextSize = state.compact and 11 or 12
+		valueLabels[key].TextSize = state.compact and 11 or 12
 	end
 end
 
@@ -452,9 +456,9 @@ local function finishTouch()
 
 	if not didMove then
 		settings.Visible = true
-		settings.Size = UDim2.fromOffset(300, 390)
+		settings.Size = UDim2.fromOffset(266, 296)
 		TweenService:Create(settings, TweenInfo.new(0.14, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-			Size = UDim2.fromOffset(330, 430),
+			Size = UDim2.fromOffset(286, 318),
 		}):Play()
 	end
 end
