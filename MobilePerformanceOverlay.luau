@@ -42,6 +42,18 @@ local function formatNumber(value, decimals)
 	return string.format("%." .. tostring(decimals or 0) .. "f", value)
 end
 
+local function simpleClamp(value, minValue, maxValue)
+	if value < minValue then
+		return minValue
+	end
+
+	if value > maxValue then
+		return maxValue
+	end
+
+	return value
+end
+
 local function applyCorner(instance, radius)
 	local corner = Instance.new("UICorner")
 	corner.CornerRadius = UDim.new(0, radius)
@@ -76,10 +88,12 @@ gui.IgnoreGuiInset = true
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 local parentOk = pcall(function()
-	gui.Parent = CoreGui
+	gui.Parent = PlayerGui
 end)
 if not parentOk then
-	gui.Parent = PlayerGui
+	pcall(function()
+		gui.Parent = CoreGui
+	end)
 end
 
 local state = {
@@ -244,6 +258,7 @@ settings.AnchorPoint = Vector2.new(0.5, 0.5)
 settings.Position = UDim2.fromScale(0.5, 0.5)
 settings.Size = UDim2.fromOffset(286, 356)
 settings.BackgroundTransparency = 0.18
+settings.Active = true
 settings.Visible = false
 settings.Parent = gui
 applyCorner(settings, 20)
@@ -376,7 +391,7 @@ local function getSelectedScript()
 		return nil
 	end
 
-	selectedScriptIndex = math.clamp(selectedScriptIndex, 1, #approvedScripts)
+	selectedScriptIndex = simpleClamp(selectedScriptIndex, 1, #approvedScripts)
 	return approvedScripts[selectedScriptIndex]
 end
 
@@ -432,7 +447,14 @@ local runScriptButton = createButton(scriptsGrid, "RunScriptButton", "Запус
 
 local styleNames = { "Neon", "Dark", "Light", "Green" }
 local styleButton = createButton(toolsGrid, "StyleButton", "", 1, function()
-	local currentIndex = table.find(styleNames, state.style) or 1
+	local currentIndex = 1
+	for index, styleName in ipairs(styleNames) do
+		if styleName == state.style then
+			currentIndex = index
+			break
+		end
+	end
+
 	state.style = styleNames[(currentIndex % #styleNames) + 1]
 end)
 
@@ -512,7 +534,7 @@ local function applyStyle()
 	for key, rowEnabled in pairs(state.rows) do
 		rowLabels[key].Parent.Visible = rowEnabled
 		if rowEnabled then
-			shownRows += 1
+			shownRows = shownRows + 1
 		end
 	end
 
@@ -654,7 +676,7 @@ RunService.RenderStepped:Connect(function(deltaTime)
 
 	local total = 0
 	for _, sample in ipairs(fpsSamples) do
-		total += sample
+		total = total + sample
 	end
 	fps = total / #fpsSamples
 end)
