@@ -1,0 +1,99 @@
+local Player = game.Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+-- Создаем главный ScreenGui
+local gui = Instance.new("ScreenGui", PlayerGui)
+gui.Name = "StyledSettingsGUI"
+
+-- Основной контейнер
+local mainFrame = Instance.new("Frame", gui)
+mainFrame.Size = UDim2.new(0, 600, 0, 400)
+mainFrame.Position = UDim2.new(0.5, -300, 0.5, -200)
+mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+mainFrame.BorderSizePixel = 0
+mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+mainFrame.ClipsDescendants = true
+mainFrame.Name = "MainContainer"
+mainFrame.Style = Enum.FrameStyle.Custom
+
+-- Боковая панель
+local sidePanel = Instance.new("Frame", mainFrame)
+sidePanel.Size = UDim2.new(0, 150, 1, 0)
+sidePanel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+sidePanel.BorderSizePixel = 0
+
+-- Основная зона для вкладок
+local contentArea = Instance.new("Frame", mainFrame)
+contentArea.Size = UDim2.new(1, -150, 1, 0)
+contentArea.Position = UDim2.new(0, 150, 0, 0)
+contentArea.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+contentArea.BorderSizePixel = 0
+
+-- Вкладки (кнопки)
+local tabs = {}
+local tabNames = {"Combat", "Audio", "Visual"}
+local function createTabButton(name, index)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, -20, 0, 40)
+    btn.Position = UDim2.new(0, 10, 0, 10 + (50 * (index - 1)))
+    btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 0) -- Желтый цвет
+    btn.Font = Enum.Font.SourceSansBold
+    btn.TextSize = 20
+    btn.Text = name
+    btn.Parent = sidePanel
+    return btn
+end
+
+for i, name in ipairs(tabNames) do
+    local tabBtn = createTabButton(name, i)
+    tabs[name] = tabBtn
+end
+
+-- Создаем вкладки с контентом
+local tabContents = {}
+local function createTabContent(name)
+    local frame = Instance.new("Frame", contentArea)
+    frame.Size = UDim2.new(1, 0, 1, 0)
+    frame.Visible = false
+    frame.BackgroundTransparency = 1
+    return frame
+end
+
+tabContents["Combat"] = createTabContent("Combat")
+tabContents["Audio"] = createTabContent("Audio")
+tabContents["Visual"] = createTabContent("Visual")
+
+-- Пример контента для вкладки "Combat"
+local combatContent = tabContents["Combat"]
+local lbl = Instance.new("TextLabel", combatContent)
+lbl.Size = UDim2.new(1, -20, 0, 50)
+lbl.Position = UDim2.new(0, 10, 0, 10)
+lbl.Text = "Combat Settings"
+lbl.Font = Enum.Font.SourceSansBold
+lbl.TextColor3 = Color3.new(1, 1, 1)
+lbl.TextSize = 22
+lbl.BackgroundTransparency = 1
+
+-- Функция переключения вкладок
+local function switchTab(name)
+    for n, frame in pairs(tabContents) do
+        frame.Visible = false
+    end
+    tabContents[name].Visible = true
+end
+
+-- Обработка нажатий на вкладки
+for name, btn in pairs(tabs) do
+    btn.MouseButton1Click:Connect(function()
+        switchTab(name)
+        -- подсветка активной вкладки (например, сделать ярче)
+        for n, b in pairs(tabs) do
+            b.BackgroundColor3 = (n == name) and Color3.fromRGB(70, 70, 70) or Color3.fromRGB(50, 50, 50)
+        end
+    end)
+end
+
+-- Изначально выбрать первую вкладку
+switchTab("Combat")
+tabs["Combat"].BackgroundColor3 = Color3.fromRGB(70, 70, 70)
