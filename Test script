@@ -1,40 +1,475 @@
-local Player = game.Players.LocalPlayer
-local PlayerGui = Player:WaitForChild("PlayerGui")
+--[[
+    ============================================
+    ROBLOX PHONE GUI SYSTEM v1.0
+    Полная система GUI с двумя меню и плавающей кнопкой
+    ============================================
+]]
 
--- Создаем главный ScreenGui
-local gui = Instance.new("ScreenGui", PlayerGui)
-gui.Name = "StyledSettingsGUI"
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
 
--- Основной контейнер
-local mainFrame = Instance.new("Frame", gui)
-mainFrame.Size = UDim2.new(0, 600, 0, 400)
-mainFrame.Position = UDim2.new(0.5, -300, 0.5, -200)
-mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-mainFrame.BorderSizePixel = 0
-mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-mainFrame.ClipsDescendants = true
-mainFrame.Name = "MainContainer"
-mainFrame.Style = Enum.FrameStyle.Custom
+-- ========== УТИЛИТЫ ==========
+local Utils = {}
 
--- Боковая панель
-local sidePanel = Instance.new("Frame", mainFrame)
-sidePanel.Size = UDim2.new(0, 150, 1, 0)
-sidePanel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-sidePanel.BorderSizePixel = 0
+-- Создание панели с закругленными углами
+function Utils:CreateRoundedFrame(parent, properties)
+    local frame = Instance.new("Frame")
+    frame.Name = properties.Name or "RoundedFrame"
+    frame.Size = properties.Size or UDim2.new(0, 200, 0, 200)
+    frame.Position = properties.Position or UDim2.new(0, 0, 0, 0)
+    frame.BackgroundColor3 = properties.BackgroundColor3 or Color3.fromRGB(66, 66, 66)
+    frame.BorderSizePixel = 0
+    frame.Parent = parent
 
--- Основная зона для вкладок
-local contentArea = Instance.new("Frame", mainFrame)
-contentArea.Size = UDim2.new(1, -150, 1, 0)
-contentArea.Position = UDim2.new(0, 150, 0, 0)
-contentArea.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-contentArea.BorderSizePixel = 0
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, properties.CornerRadius or 8)
+    corner.Parent = frame
 
--- Вкладки (кнопки)
-local tabs = {}
-local tabNames = {"Combat", "Audio", "Visual"}
-local function createTabButton(name, index)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, -20, 0, 40)
+    return frame
+end
+
+-- Создание кнопки
+function Utils:CreateButton(parent, properties)
+    local button = self:CreateRoundedFrame(parent, {
+        Name = properties.Name or "Button",
+        Size = properties.Size or UDim2.new(0, 100, 0, 40),
+        Position = properties.Position or UDim2.new(0, 0, 0, 0),
+        BackgroundColor3 = properties.BackgroundColor3 or Color3.fromRGB(90, 90, 90),
+        CornerRadius = 6
+    })
+
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Name = "TextLabel"
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    textLabel.TextScaled = true
+    textLabel.Font = Enum.Font.GothamBold
+    textLabel.Text = properties.Text or "Button"
+    textLabel.Parent = button
+
+    if properties.Callback then
+        button.MouseButton1Click:Connect(properties.Callback)
+    end
+
+    return button
+end
+
+-- Анимация появления
+function Utils:AnimateIn(instance, duration)
+    duration = duration or 0.3
+    instance.BackgroundTransparency = 1
+    
+    local tweenService = game:GetService("TweenService")
+    local tweenInfo = TweenInfo.new(
+        duration,
+        Enum.EasingStyle.Quad,
+        Enum.EasingDirection.Out
+    )
+    
+    local tween = tweenService:Create(instance, tweenInfo, {BackgroundTransparency = 0})
+    tween:Play()
+    
+    return tween
+end
+
+-- ========== ПЛАВАЮЩАЯ КНОПКА ==========
+local FloatingButton = {}
+FloatingButton.__index = FloatingButton
+
+function FloatingButton.new(parent)
+    local self = setmetatable({}, FloatingButton)
+    
+    self.parent = parent
+    self.isDragging = false
+    self.dragStart = nil
+    self.dragStartPos = nil
+    self.onToggle = nil
+    self.isOpen = false
+    
+    self:CreateButton()
+    
+    return self
+end
+
+function FloatingButton:CreateButton()
+    self.button = Utils:CreateRoundedFrame(self.parent, {
+        Name = "FloatingButton",
+        Size = UDim2.new(0, 60, 0, 60),
+        Position = UDim2.new(1, -80, 1, -80),
+        BackgroundColor3 = Color3.fromRGB(66, 150, 255),
+        CornerRadius = 30
+    })
+    
+    local shadow = Instance.new("Frame")
+    shadow.Name = "Shadow"
+    shadow.Size = UDim2.new(1, 0, 1, 0)
+    shadow.Position = UDim2.new(0, 2, 0, 2)
+    shadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    shadow.BorderSizePixel = 0
+    shadow.ZIndex = 0
+    
+    local shadowCorner = Instance.new("UICorner")
+    shadowCorner.CornerRadius = UDim.new(0, 30)
+    shadowCorner.Parent = shadow
+    
+    shadow.Parent = self.button
+    
+    local icon = Instance.new("TextLabel")
+    icon.Name = "Icon"
+    icon.Size = UDim2.new(1, 0, 1, 0)
+    icon.BackgroundTransparency = 1
+    icon.TextColor3 = Color3.fromRGB(255, 255, 255)
+    icon.TextScaled = true
+    icon.Font = Enum.Font.GothamBold
+    icon.Text = "☎"
+    icon.ZIndex = 2
+    icon.Parent = self.button
+    
+    self.button.MouseButton1Click:Connect(function()
+        if not self.isDragging then
+            self:Toggle()
+        end
+    end)
+    
+    self:SetupDragging()
+end
+
+function FloatingButton:SetupDragging()
+    local UserInputService = game:GetService("UserInputService")
+    local mouse = game.Players.LocalPlayer:GetMouse()
+    
+    self.button.MouseButton1Down:Connect(function()
+        self.isDragging = true
+        self.dragStart = mouse.Hit.Position
+        self.dragStartPos = self.button.Position
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input, gameProcessed)
+        if gameProcessed or not self.isDragging then return end
+        
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            local delta = mouse.X - (self.dragStartPos.X.Offset or 0)
+            local deltaY = mouse.Y - (self.dragStartPos.Y.Offset or 0)
+            
+            self.button.Position = UDim2.new(
+                0, 
+                self.dragStartPos.X.Offset + delta,
+                0, 
+                self.dragStartPos.Y.Offset + deltaY
+            )
+        end
+    end)
+    
+    UserInputService.InputEnded:Connect(function(input, gameProcessed)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            self.isDragging = false
+        end
+    end)
+end
+
+function FloatingButton:Toggle()
+    self.isOpen = not self.isOpen
+    
+    if self.onToggle then
+        self.onToggle(self.isOpen)
+    end
+    
+    local newColor = self.isOpen and Color3.fromRGB(200, 100, 255) or Color3.fromRGB(66, 150, 255)
+    self:AnimateColor(newColor)
+end
+
+function FloatingButton:AnimateColor(newColor)
+    local tweenService = game:GetService("TweenService")
+    local tweenInfo = TweenInfo.new(
+        0.2,
+        Enum.EasingStyle.Quad,
+        Enum.EasingDirection.Out
+    )
+    
+    local tween = tweenService:Create(self.button, tweenInfo, {BackgroundColor3 = newColor})
+    tween:Play()
+end
+
+function FloatingButton:OnToggle(callback)
+    self.onToggle = callback
+end
+
+-- ========== ОСНОВНОЕ МЕНЮ ==========
+local MainMenu = {}
+MainMenu.__index = MainMenu
+
+function MainMenu.new(parent)
+    local self = setmetatable({}, MainMenu)
+    
+    self.parent = parent
+    self.isOpen = false
+    self:CreateMenu()
+    
+    return self
+end
+
+function MainMenu:CreateMenu()
+    self.menuPanel = Utils:CreateRoundedFrame(self.parent, {
+        Name = "MainMenu",
+        Size = UDim2.new(0, 400, 0, 600),
+        Position = UDim2.new(0.5, -200, 0.5, -300),
+        BackgroundColor3 = Color3.fromRGB(40, 40, 40),
+        CornerRadius = 10
+    })
+    self.menuPanel.Visible = false
+    
+    local closeButton = Utils:CreateButton(self.menuPanel, {
+        Name = "CloseButton",
+        Size = UDim2.new(0, 30, 0, 30),
+        Position = UDim2.new(1, -40, 0, 10),
+        BackgroundColor3 = Color3.fromRGB(200, 50, 50),
+        Text = "✕"
+    })
+    
+    closeButton.MouseButton1Click:Connect(function()
+        self:Close()
+    end)
+    
+    local title = Instance.new("TextLabel")
+    title.Name = "Title"
+    title.Size = UDim2.new(1, -60, 0, 40)
+    title.Position = UDim2.new(0, 10, 0, 10)
+    title.BackgroundTransparency = 1
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.TextScaled = true
+    title.Font = Enum.Font.GothamBold
+    title.Text = "Главное Меню"
+    title.Parent = self.menuPanel
+    
+    self.tabContainer = Utils:CreateRoundedFrame(self.menuPanel, {
+        Name = "TabContainer",
+        Size = UDim2.new(1, -20, 1, -120),
+        Position = UDim2.new(0, 10, 0, 60),
+        BackgroundColor3 = Color3.fromRGB(50, 50, 50),
+        CornerRadius = 8
+    })
+    
+    local scrollFrame = Instance.new("ScrollingFrame")
+    scrollFrame.Name = "ScrollFrame"
+    scrollFrame.Size = UDim2.new(1, 0, 1, 0)
+    scrollFrame.BackgroundTransparency = 1
+    scrollFrame.ScrollBarThickness = 8
+    scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 500)
+    scrollFrame.Parent = self.tabContainer
+    
+    local listLayout = Instance.new("UIListLayout")
+    listLayout.Padding = UDim.new(0, 10)
+    listLayout.Parent = scrollFrame
+    
+    self.scrollFrame = scrollFrame
+    
+    self:AddMenuOption(scrollFrame, "💰 Coins")
+    self:AddMenuOption(scrollFrame, "🛍 Shop")
+    self:AddMenuOption(scrollFrame, "🧸 Toys")
+    self:AddMenuOption(scrollFrame, "🗑 Destroy Toys")
+    self:AddMenuOption(scrollFrame, "⭐ Favorites")
+    self:AddMenuOption(scrollFrame, "⚙ Settings")
+end
+
+function MainMenu:AddMenuOption(parent, text)
+    local option = Utils:CreateButton(parent, {
+        Name = text,
+        Size = UDim2.new(1, -20, 0, 50),
+        Position = UDim2.new(0, 10, 0, 0),
+        BackgroundColor3 = Color3.fromRGB(66, 66, 66),
+        Text = text
+    })
+    
+    option.Parent = parent
+end
+
+function MainMenu:Open()
+    self.isOpen = true
+    self.menuPanel.Visible = true
+    Utils:AnimateIn(self.menuPanel, 0.3)
+end
+
+function MainMenu:Close()
+    self.isOpen = false
+    self.menuPanel.Visible = false
+end
+
+-- ========== МЕНЮ ТЕЛЕФОНА ==========
+local PhoneMenu = {}
+PhoneMenu.__index = PhoneMenu
+
+function PhoneMenu.new(parent)
+    local self = setmetatable({}, PhoneMenu)
+    
+    self.parent = parent
+    self.isOpen = false
+    self.currentApp = nil
+    
+    self:CreatePhoneInterface()
+    
+    return self
+end
+
+function PhoneMenu:CreatePhoneInterface()
+    self.phonePanel = Utils:CreateRoundedFrame(self.parent, {
+        Name = "PhoneInterface",
+        Size = UDim2.new(0, 320, 0, 640),
+        Position = UDim2.new(0, 50, 0.5, -320),
+        BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+        CornerRadius = 20
+    })
+    self.phonePanel.Visible = false
+    
+    local screen = Utils:CreateRoundedFrame(self.phonePanel, {
+        Name = "Screen",
+        Size = UDim2.new(1, -10, 1, -60),
+        Position = UDim2.new(0, 5, 0, 5),
+        BackgroundColor3 = Color3.fromRGB(30, 30, 30),
+        CornerRadius = 15
+    })
+    
+    local statusBar = Utils:CreateRoundedFrame(screen, {
+        Name = "StatusBar",
+        Size = UDim2.new(1, 0, 0, 30),
+        Position = UDim2.new(0, 0, 0, 0),
+        BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+        CornerRadius = 0
+    })
+    
+    local statusText = Instance.new("TextLabel")
+    statusText.Name = "StatusText"
+    statusText.Size = UDim2.new(1, 0, 1, 0)
+    statusText.BackgroundTransparency = 1
+    statusText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    statusText.TextScaled = true
+    statusText.Font = Enum.Font.GothamBold
+    statusText.Text = "09:41 🔋"
+    statusText.Parent = statusBar
+    
+    self.screenContent = Utils:CreateRoundedFrame(screen, {
+        Name = "Content",
+        Size = UDim2.new(1, -10, 1, -50),
+        Position = UDim2.new(0, 5, 0, 35),
+        BackgroundColor3 = Color3.fromRGB(40, 40, 40),
+        CornerRadius = 10
+    })
+    
+    local scrollFrame = Instance.new("ScrollingFrame")
+    scrollFrame.Name = "AppScroll"
+    scrollFrame.Size = UDim2.new(1, 0, 1, 0)
+    scrollFrame.BackgroundTransparency = 1
+    scrollFrame.ScrollBarThickness = 6
+    scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 300)
+    scrollFrame.Parent = self.screenContent
+    
+    local gridLayout = Instance.new("UIGridLayout")
+    gridLayout.CellSize = UDim2.new(0, 70, 0, 80)
+    gridLayout.CellPadding = UDim2.new(0, 10, 0, 10)
+    gridLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    gridLayout.Parent = scrollFrame
+    
+    self.appContainer = scrollFrame
+    
+    self:AddApp("📞", "Calls")
+    self:AddApp("💬", "Messages")
+    self:AddApp("👥", "Contacts")
+    self:AddApp("📱", "Phone")
+    self:AddApp("🎮", "Games")
+    self:AddApp("📷", "Camera")
+    self:AddApp("🎵", "Music")
+    self:AddApp("⚙", "Settings")
+    
+    local homeButton = Utils:CreateButton(self.phonePanel, {
+        Name = "HomeButton",
+        Size = UDim2.new(0, 40, 0, 40),
+        Position = UDim2.new(0.5, -20, 1, -50),
+        BackgroundColor3 = Color3.fromRGB(100, 100, 100),
+        Text = "⌂"
+    })
+    
+    homeButton.MouseButton1Click:Connect(function()
+        self:Close()
+    end)
+end
+
+function PhoneMenu:AddApp(icon, name)
+    local appButton = Instance.new("TextButton")
+    appButton.Name = name
+    appButton.Size = UDim2.new(0, 70, 0, 70)
+    appButton.BackgroundColor3 = Color3.fromRGB(66, 66, 255)
+    appButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    appButton.TextSize = 30
+    appButton.TextScaled = true
+    appButton.Font = Enum.Font.GothamBold
+    appButton.Text = icon
+    appButton.Parent = self.appContainer
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 15)
+    corner.Parent = appButton
+    
+    appButton.MouseButton1Click:Connect(function()
+        self:OpenApp(name)
+    end)
+end
+
+function PhoneMenu:OpenApp(appName)
+    print("📱 Открыто приложение: " .. appName)
+    self.currentApp = appName
+end
+
+function PhoneMenu:Open()
+    self.isOpen = true
+    self.phonePanel.Visible = true
+    Utils:AnimateIn(self.phonePanel, 0.3)
+end
+
+function PhoneMenu:Close()
+    self.isOpen = false
+    self.phonePanel.Visible = false
+end
+
+-- ========== ИНИЦИАЛИЗАЦИЯ ==========
+local guiFolder = Instance.new("ScreenGui")
+guiFolder.Name = "PhoneGUISystem"
+guiFolder.ResetOnSpawn = false
+guiFolder.Parent = playerGui
+
+local mainMenu = MainMenu.new(guiFolder)
+local phoneMenu = PhoneMenu.new(guiFolder)
+local floatingButton = FloatingButton.new(guiFolder)
+
+floatingButton:OnToggle(function(isOpen)
+    if isOpen then
+        mainMenu:Open()
+        print("✓ Главное меню открыто!")
+    else
+        mainMenu:Close()
+        phoneMenu:Close()
+        print("✓ Меню закрыто!")
+    end
+end)
+
+print("✓ Система GUI инициализирована!")
+print("ℹ Нажмите на кнопку телефона в нижнем-правом углу!")
+
+_G.ToggleMainMenu = function()
+    if mainMenu.isOpen then
+        mainMenu:Close()
+    else
+        mainMenu:Open()
+    end
+end
+
+_G.TogglePhoneMenu = function()
+    if phoneMenu.isOpen then
+        phoneMenu:Close()
+    else
+        phoneMenu:Open()
+    end
+end    btn.Size = UDim2.new(1, -20, 0, 40)
     btn.Position = UDim2.new(0, 10, 0, 10 + (50 * (index - 1)))
     btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
     btn.TextColor3 = Color3.fromRGB(255, 255, 0) -- Желтый цвет
