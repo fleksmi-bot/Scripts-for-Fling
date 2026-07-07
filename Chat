@@ -30,7 +30,7 @@ UICorner.CornerRadius = UDim.new(0, 4)
 UICorner.Parent = MainFrame
 
 local ChatTag = Instance.new("TextLabel")
-ChatTag.Size = UDim2.new(1, -10, 0, 20)
+ChatTag.Size = UDim2.new(1, -40, 0, 20)
 ChatTag.Position = UDim2.new(0, 5, 0, 2)
 ChatTag.BackgroundTransparency = 1
 ChatTag.Text = "[ SECRET SCRIPT CHAT ]"
@@ -39,6 +39,28 @@ ChatTag.TextSize = 12
 ChatTag.Font = Enum.Font.SourceSansBold
 ChatTag.TextXAlignment = Enum.TextXAlignment.Left
 ChatTag.Parent = MainFrame
+
+-- Кнопка закрытия окна (X)
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 20, 0, 20)
+CloseBtn.Position = UDim2.new(1, -25, 0, 2)
+CloseBtn.AnchorPoint = Vector2.new(0, 0)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+CloseBtn.BackgroundTransparency = 0.2
+CloseBtn.BorderSizePixel = 0
+CloseBtn.Text = "X"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.TextSize = 14
+CloseBtn.Font = Enum.Font.SourceSansBold
+CloseBtn.Parent = MainFrame
+
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0, 4)
+CloseCorner.Parent = CloseBtn
+
+CloseBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = false
+end)
 
 local ScrollingFrame = Instance.new("ScrollingFrame")
 ScrollingFrame.Size = UDim2.new(1, -10, 1, -60)
@@ -190,4 +212,3 @@ end
 
 -- Системное уведомление о запуске чата внутри GUI
 appendMessage("Система", "<font color='#FFFF55'>Приватный чат успешно запущен и готов к работе!</font>")
-
