@@ -1,0 +1,193 @@
+-- Инициализация сервисов
+local TextChatService = game:GetService("TextChatService")
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+
+-- Проверяем наличие папки для старой системы чата
+local LegacyChatEvent = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents") 
+    and ReplicatedStorage.DefaultChatSystemChatEvents:FindFirstChild("SayMessageRequest")
+
+-- Создание GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "RobloxStylePrivateChatInvisible"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = CoreGui
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 340, 0, 180)
+MainFrame.Position = UDim2.new(0, 15, 0, 85)
+MainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+MainFrame.BackgroundTransparency = 0.4
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 4)
+UICorner.Parent = MainFrame
+
+local ChatTag = Instance.new("TextLabel")
+ChatTag.Size = UDim2.new(1, -10, 0, 20)
+ChatTag.Position = UDim2.new(0, 5, 0, 2)
+ChatTag.BackgroundTransparency = 1
+ChatTag.Text = "[ SECRET SCRIPT CHAT ]"
+ChatTag.TextColor3 = Color3.fromRGB(170, 170, 170)
+ChatTag.TextSize = 12
+ChatTag.Font = Enum.Font.SourceSansBold
+ChatTag.TextXAlignment = Enum.TextXAlignment.Left
+ChatTag.Parent = MainFrame
+
+local ScrollingFrame = Instance.new("ScrollingFrame")
+ScrollingFrame.Size = UDim2.new(1, -10, 1, -60)
+ScrollingFrame.Position = UDim2.new(0, 5, 0, 22)
+ScrollingFrame.BackgroundTransparency = 1
+ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+ScrollingFrame.ScrollBarThickness = 2
+ScrollingFrame.Parent = MainFrame
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.Parent = ScrollingFrame
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 4)
+
+local TextBox = Instance.new("TextBox")
+TextBox.Size = UDim2.new(1, -10, 0, 30)
+TextBox.Position = UDim2.new(0, 5, 1, -35)
+TextBox.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+TextBox.BackgroundTransparency = 0.3
+TextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextBox.PlaceholderText = "Напишите секретное сообщение..."
+TextBox.PlaceholderColor3 = Color3.fromRGB(180, 180, 180)
+TextBox.Text = ""
+TextBox.TextSize = 16
+TextBox.Font = Enum.Font.SourceSansBold
+TextBox.TextXAlignment = Enum.TextXAlignment.Left
+TextBox.ClearTextOnFocus = false
+TextBox.Parent = MainFrame
+
+local TextPadding = Instance.new("UIPadding")
+TextPadding.PaddingLeft = UDim.new(0, 8)
+TextPadding.Parent = TextBox
+
+local TextCorner = Instance.new("UICorner")
+TextCorner.CornerRadius = UDim.new(0, 4)
+TextCorner.Parent = TextBox
+
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Size = UDim2.new(0, 25, 0, 25)
+ToggleBtn.Position = UDim2.new(0, 360, 0, 85)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+ToggleBtn.BackgroundTransparency = 0.4
+ToggleBtn.Text = "S"
+ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleBtn.TextSize = 14
+ToggleBtn.Font = Enum.Font.SourceSansBold
+ToggleBtn.Parent = ScreenGui
+
+local ToggleCorner = Instance.new("UICorner")
+ToggleCorner.CornerRadius = UDim.new(0, 4)
+ToggleCorner.Parent = ToggleBtn
+
+ToggleBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+end)
+
+-- НЕВИДИМЫЙ ЮНИКОД МАРКЕР (Zero-Width Space)
+local INVISIBLE_PREFIX = "\u{200B}\u{200C}\u{200D}"
+
+-- Функция вывода сообщений в кастомное окно
+local function appendMessage(senderName, messageText)
+    -- Очищаем текст сообщения от невидимого префикса, чтобы он не ломал отображение
+    if messageText:sub(1, #INVISIBLE_PREFIX) == INVISIBLE_PREFIX then
+        messageText = messageText:sub(#INVISIBLE_PREFIX + 1)
+    end
+
+    local MessageLabel = Instance.new("TextLabel")
+    MessageLabel.Size = UDim2.new(1, 0, 0, 20)
+    MessageLabel.BackgroundTransparency = 1
+    MessageLabel.Font = Enum.Font.SourceSansBold
+    MessageLabel.TextSize = 16
+    MessageLabel.TextXAlignment = Enum.TextXAlignment.Left
+    MessageLabel.TextWrapped = true
+    
+    -- Включаем поддержку HTML-тегов цветов (КРИТИЧЕСКИЙ ИСПРАВЛЕННЫЙ ПУНКТ)
+    MessageLabel.RichText = true 
+    
+    if senderName == LocalPlayer.Name then
+        MessageLabel.Text = "<font color='#55FF55'>" .. senderName .. ":</font> <font color='#FFFFFF'>" .. messageText .. "</font>"
+    else
+        MessageLabel.Text = "<font color='#FF5555'>" .. senderName .. ":</font> <font color='#FFFFFF'>" .. messageText .. "</font>"
+    end
+    
+    MessageLabel.TextStrokeTransparency = 0.8
+    MessageLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    MessageLabel.Parent = ScrollingFrame
+    
+    -- Корректный перерасчет высоты строки на мобильных устройствах
+    task.wait(0.05)
+    MessageLabel.Size = UDim2.new(1, 0, 0, MessageLabel.TextBounds.Y + 2)
+    ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y)
+    ScrollingFrame.CanvasPosition = Vector2.new(0, UIListLayout.AbsoluteContentSize.Y)
+end
+
+-- Логика отправки сообщений
+TextBox.FocusLost:Connect(function(enterPressed)
+    if enterPressed and TextBox.Text ~= "" then
+        local msg = TextBox.Text
+        TextBox.Text = ""
+        
+        local hiddenPayload = INVISIBLE_PREFIX .. msg
+        
+        -- Проверяем актуальную систему чата и отправляем пакет данных
+        if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+            local channel = TextChatService.TextChannels:FindFirstChild("RBXGeneral")
+            if channel then
+                channel:SendAsync(hiddenPayload)
+            end
+        elseif LegacyChatEvent then
+            LegacyChatEvent:FireServer(hiddenPayload, "All")
+        end
+    end
+end)
+
+-- Слушатель входящих сообщений для Новой системы чата (TextChatService)
+if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+    TextChatService.OnIncomingMessage = function(message)
+        if message.Text:sub(1, #INVISIBLE_PREFIX) == INVISIBLE_PREFIX then
+            local cleanMessage = message.Text:sub(#INVISIBLE_PREFIX + 1)
+            local sender = message.TextSource and message.TextSource.Name or "Unknown"
+            
+            appendMessage(sender, cleanMessage)
+            
+            -- Скрываем текст из стандартного окна чата, оставляя пустую строку
+            local properties = Instance.new("TextChatMessageProperties")
+            properties.Text = " "
+            return properties
+        end
+    end
+end
+
+-- Универсальный слушатель чата (работает и на старых, и на новых плейсах через событие .Chatted)
+local function hookPlayer(player)
+    player.Chatted:Connect(function(msg)
+        if msg:sub(1, #INVISIBLE_PREFIX) == INVISIBLE_PREFIX then
+            -- Если это TextChatService, OnIncomingMessage уже обработал его, чтобы избежать дублей
+            if TextChatService.ChatVersion ~= Enum.ChatVersion.TextChatService then
+                local cleanMessage = msg:sub(#INVISIBLE_PREFIX + 1)
+                appendMessage(player.Name, cleanMessage)
+            end
+        end
+    end)
+end
+
+Players.PlayerAdded:Connect(hookPlayer)
+for _, player in ipairs(Players:GetPlayers()) do
+    hookPlayer(player)
+end
+
+-- Системное уведомление о запуске чата внутри GUI
+appendMessage("Система", "<font color='#FFFF55'>Приватный чат успешно запущен и готов к работе!</font>")
+
